@@ -1,0 +1,21 @@
+# Whisper GUI v3.0 - Dependencias
+
+# === REQUERIDO ===
+# Cliente para Groq API (super barato, recomendado)
+groq>=0.4.0
+
+# === OPCIONAL ===
+# Cliente para OpenAI (más caro pero también funciona)
+openai>=1.0.0
+
+# Whisper local (gratis pero lento en CPU sin GPU)
+# openai-whisper>=20230314
+
+# === NOTAS ===
+# FFmpeg es requerido pero debe instalarse por separado:
+# - Windows: choco install ffmpeg
+# - Mac: brew install ffmpeg  
+# - Linux: sudo apt install ffmpeg
+
+# Para usar Whisper local con mejor rendimiento:
+# pip install faster-whisper

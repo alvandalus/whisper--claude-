@@ -1,0 +1,56 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Excluir requirements.txt
+!requirements.txt
+
+# Instalador
+rustup-init.exe
+
+# Directorios de datos
+data/
+chunks/
+temp/
+*.mp3
+*.wav
+*.m4a
+*.flac
+*.opus
+*.ogg
+*.aac
+*.wma
+
+# Archivos de configuración
+.vs/
+.vscode/
+.idea/
+*.code-workspace
+
+# Archivos temporales
+*.temp
+*.tmp
+*.bak
+*.swp
+*.swo
+
+# Archivos del sistema
+.DS_Store
+Thumbs.db
+
+# Archivos de transcripción e historial
+transcripciones/
+history/
+history.json
+*.srt
+*.txt
