@@ -403,26 +403,6 @@ def cleanup_temp_directory() -> None:
         logger.error(f"Error limpiando directorio temporal: {e}")
 
 
-def format_duration(seconds: int) -> str:
-    """
-    Formatear duración en formato legible
-
-    Args:
-        seconds: Duración en segundos
-
-    Returns:
-        str: Duración formateada (ej: "2:35" o "1:23:45")
-    """
-    hours = seconds // 3600
-    minutes = (seconds % 3600) // 60
-    secs = seconds % 60
-
-    if hours > 0:
-        return f"{hours}:{minutes:02d}:{secs:02d}"
-    else:
-        return f"{minutes}:{secs:02d}"
-
-
 def validate_audio_file(audio_path: Path) -> tuple[bool, str]:
     """
     Validar que un archivo de audio es válido

@@ -14,11 +14,21 @@ from typing import Optional
 
 from .config import AppConfig, TRANSCRIPTS_DIR
 from .budget import get_budget_manager
+from .history import get_history_manager
+from .history_tab import HistoryTabManager
+from .ui_utils import (
+    ProgressDialog,
+    StatusBarManager,
+    ScrollableFrame,
+    ConfirmDialog,
+    format_cost,
+    format_filesize,
+    format_duration
+)
 from .audio_utils import (
     AUDIO_EXTENSIONS,
     get_audio_duration,
     apply_vad_preprocessing,
-    format_duration,
     validate_audio_file
 )
 from .core import (
@@ -80,6 +90,9 @@ class TranscriptorProApp(tk.Tk):
         self.tab_batch = ttk.Frame(notebook)
         notebook.add(self.tab_batch, text="📁 Procesamiento por lotes")
 
+        self.tab_history = ttk.Frame(notebook)
+        notebook.add(self.tab_history, text="📋 Historial")
+
         self.tab_config = ttk.Frame(notebook)
         notebook.add(self.tab_config, text="⚙️ Configuración")
 
@@ -89,6 +102,7 @@ class TranscriptorProApp(tk.Tk):
         # Construir cada pestaña
         self._build_single_tab()
         self._build_batch_tab()
+        self._build_history_tab()
         self._build_config_tab()
         self._build_compare_tab()
 
@@ -128,6 +142,26 @@ class TranscriptorProApp(tk.Tk):
             state="disabled"
         )
         self.btn_transcribe.pack(side="right", padx=2)
+
+        # Frame de progreso
+        progress_frame = ttk.Frame(self.tab_single, padding=(10, 5))
+        progress_frame.pack(fill="x")
+
+        # Barra de progreso
+        self.single_progress = ttk.Progressbar(
+            progress_frame,
+            mode='determinate',
+            length=400
+        )
+        self.single_progress.pack(side="left", fill="x", expand=True, padx=(0, 10))
+
+        # Label de porcentaje y estado
+        self.lbl_progress = ttk.Label(
+            progress_frame,
+            text="",
+            font=("Segoe UI", 9)
+        )
+        self.lbl_progress.pack(side="left")
 
         # Frame central - Resultado
         body_frame = ttk.Frame(self.tab_single, padding=10)
@@ -258,6 +292,11 @@ class TranscriptorProApp(tk.Tk):
         )
         self.log_batch.pack(side="left", fill="both", expand=True)
         log_scroll.config(command=self.log_batch.yview)
+
+    def _build_history_tab(self):
+        """Pestaña de historial"""
+        # Inicializar el gestor de historial
+        self.history_tab_manager = HistoryTabManager(self.tab_history, self)
 
     def _build_config_tab(self):
         """Pestaña de configuración"""
@@ -606,6 +645,9 @@ class TranscriptorProApp(tk.Tk):
     def _worker_single_transcription(self):
         """Worker thread para transcripción única"""
         try:
+            # Inicializar progreso
+            self._update_progress(0, "Iniciando...")
+
             src = self.current_audio
 
             # Aplicar VAD si está activado
@@ -623,12 +665,16 @@ class TranscriptorProApp(tk.Tk):
 
                     if not response:
                         self.after(0, lambda: self.btn_transcribe.config(state="normal"))
+                        self._update_progress(0, "")
                         return
 
                 self._update_status("Aplicando VAD...")
+                self._update_progress(10, "Aplicando VAD...")
                 src = apply_vad_preprocessing(src)
+                self._update_progress(20, "VAD completado")
 
             # Verificar presupuesto
+            self._update_progress(25, "Verificando presupuesto...")
             duration = get_audio_duration(src)
             cost = calculate_cost(duration, self.config.model)
 
@@ -639,13 +685,17 @@ class TranscriptorProApp(tk.Tk):
                     f"Sin presupuesto para ${cost:.4f}\n"
                     f"Disponible: ${budget_mgr.get_remaining():.4f}"
                 ))
+                self._update_progress(0, "")
                 return
 
             # Transcribir
             self._update_status("Transcribiendo...")
+            self._update_progress(40, "Transcribiendo audio...")
             result = transcribe_audio(src, model=self.config.model)
+            self._update_progress(80, "Transcripción completada")
 
             # Guardar
+            self._update_progress(85, "Guardando archivos...")
             timestamp = int(dt.datetime.now().timestamp())
             out_dir = Path(self.config.output_dir)
             out_dir.mkdir(exist_ok=True, parents=True)
@@ -658,9 +708,28 @@ class TranscriptorProApp(tk.Tk):
                 out_srt = out_dir / f"{base_name}.srt"
                 out_srt.write_text(generate_srt(result), encoding="utf-8")
 
+            self._update_progress(95, "Actualizando historial...")
+
+            # Guardar en historial
+            history_mgr = get_history_manager()
+            history_mgr.add_transcription({
+                'original_file': str(self.current_audio),
+                'model': self.config.model,
+                'duration': duration,
+                'cost': cost,
+                'language': result.language if hasattr(result, 'language') else 'unknown',
+                'output_path': str(out_txt),
+                'text_preview': result.text[:200] + '...' if len(result.text) > 200 else result.text,
+                'has_srt': self.config.export_srt
+            })
+
             # Actualizar UI
             self.after(0, lambda: self.txt_result.delete("1.0", tk.END))
             self.after(0, lambda: self.txt_result.insert("1.0", result.text))
+
+            # Refrescar historial si está visible
+            if hasattr(self, 'history_tab_manager'):
+                self.after(0, lambda: self.history_tab_manager.refresh())
 
             # Consumir presupuesto
             budget_mgr.consume(cost)
@@ -673,9 +742,13 @@ class TranscriptorProApp(tk.Tk):
                 f"🤖 {PROVIDER_MAPPING.get(self.config.model, '?').upper()}"
             )
 
+            self._update_progress(100, "¡Completado!")
             self.after(0, lambda: messagebox.showinfo("Éxito", msg))
             self.after(0, self._update_budget_status)
             self._update_status("Listo")
+
+            # Limpiar progreso después de 2 segundos
+            self.after(2000, lambda: self._update_progress(0, ""))
 
         except Exception as e:
             logger.error(f"Error en transcripción: {e}")
@@ -683,6 +756,7 @@ class TranscriptorProApp(tk.Tk):
                 "Error",
                 f"Error en transcripción:\n{str(e)}"
             ))
+            self._update_progress(0, "Error")
         finally:
             self.after(0, lambda: self.btn_transcribe.config(state="normal"))
 
@@ -748,13 +822,27 @@ class TranscriptorProApp(tk.Tk):
 
                 # Guardar
                 base = outdir / audio_file.stem
-                base.with_suffix(".txt").write_text(result.text, encoding="utf-8")
+                out_txt = base.with_suffix(".txt")
+                out_txt.write_text(result.text, encoding="utf-8")
 
                 if self.config.export_srt:
                     base.with_suffix(".srt").write_text(
                         generate_srt(result),
                         encoding="utf-8"
                     )
+
+                # Guardar en historial
+                history_mgr = get_history_manager()
+                history_mgr.add_transcription({
+                    'original_file': str(audio_file),
+                    'model': self.config.model,
+                    'duration': duration,
+                    'cost': cost,
+                    'language': result.language if hasattr(result, 'language') else 'unknown',
+                    'output_path': str(out_txt),
+                    'text_preview': result.text[:200] + '...' if len(result.text) > 200 else result.text,
+                    'has_srt': self.config.export_srt
+                })
 
                 # Consumir presupuesto
                 budget_mgr.consume(cost)
@@ -777,6 +865,10 @@ class TranscriptorProApp(tk.Tk):
         self.after(0, lambda: self.batch_progress.config(value=0))
         self.after(0, self._update_budget_status)
         self.after(0, lambda: self.btn_batch.config(state="normal"))
+
+        # Refrescar historial si hay nuevas transcripciones
+        if successful > 0 and hasattr(self, 'history_tab_manager'):
+            self.after(0, lambda: self.history_tab_manager.refresh())
 
     def _log(self, msg: str):
         """Añadir mensaje al log de lotes"""
@@ -1013,6 +1105,16 @@ class TranscriptorProApp(tk.Tk):
     def _update_status(self, text: str):
         """Actualizar barra de estado"""
         self.after(0, lambda: self.status_bar.config(text=text))
+
+    def _update_progress(self, value: int, message: str = ""):
+        """Actualizar barra de progreso y mensaje"""
+        def update():
+            self.single_progress['value'] = value
+            if message:
+                self.lbl_progress.config(text=f"{value}% - {message}")
+            else:
+                self.lbl_progress.config(text="")
+        self.after(0, update)
 
     def _show_welcome_message(self):
         """Mostrar mensaje de bienvenida"""
