@@ -255,6 +255,7 @@ class TranscriptionHistory:
             return {
                 'total_transcriptions': 0,
                 'total_duration': 0,
+                'total_duration_hours': 0,
                 'total_cost': 0,
                 'average_cost': 0,
                 'models_used': {},
