@@ -56,7 +56,7 @@ class TranscriptorProApp(tk.Tk):
         super().__init__()
         self.title("Transcriptor Pro v1.0 – Multi-Provider Edition 🎙️")
         self.geometry("1100x750")
-        self.minsize(900, 600)
+        self.minsize(1000, 700)
 
         # Cargar configuración
         self.config = AppConfig.load()
@@ -308,7 +308,7 @@ class TranscriptorProApp(tk.Tk):
             command=canvas.yview
         )
 
-        frame = ttk.Frame(canvas, padding=20)
+        frame = ttk.Frame(canvas, padding=15)
 
         frame.bind(
             "<Configure>",
@@ -318,6 +318,9 @@ class TranscriptorProApp(tk.Tk):
         canvas.create_window((0, 0), window=frame, anchor="nw")
         canvas.configure(yscrollcommand=scrollbar.set)
 
+        # Scroll con rueda del mouse
+        canvas.bind_all("<MouseWheel>", lambda e: canvas.yview_scroll(int(-1 * (e.delta / 120)), "units"))
+
         canvas.pack(side="left", fill="both", expand=True)
         scrollbar.pack(side="right", fill="y")
 
@@ -325,9 +328,9 @@ class TranscriptorProApp(tk.Tk):
         section_model = ttk.LabelFrame(
             frame,
             text="🤖 Proveedor y Modelo",
-            padding=15
+            padding=10
         )
-        section_model.pack(fill="x", pady=10)
+        section_model.pack(fill="x", pady=5)
 
         ttk.Label(section_model, text="Modelo:").grid(
             row=0, column=0, sticky="w", pady=5
@@ -357,9 +360,9 @@ class TranscriptorProApp(tk.Tk):
         section_keys = ttk.LabelFrame(
             frame,
             text="🔑 API Keys",
-            padding=15
+            padding=10
         )
-        section_keys.pack(fill="x", pady=10)
+        section_keys.pack(fill="x", pady=5)
 
         # OpenAI
         ttk.Label(section_keys, text="OpenAI API Key:").grid(
@@ -424,9 +427,9 @@ class TranscriptorProApp(tk.Tk):
         section_opts = ttk.LabelFrame(
             frame,
             text="🎛️ Opciones de Procesamiento",
-            padding=15
+            padding=10
         )
-        section_opts.pack(fill="x", pady=10)
+        section_opts.pack(fill="x", pady=5)
 
         ttk.Label(section_opts, text="Bitrate (kbps):").grid(
             row=0, column=0, sticky="w", pady=5
@@ -460,9 +463,9 @@ class TranscriptorProApp(tk.Tk):
         section_budget = ttk.LabelFrame(
             frame,
             text="💰 Control de Presupuesto",
-            padding=15
+            padding=10
         )
-        section_budget.pack(fill="x", pady=10)
+        section_budget.pack(fill="x", pady=5)
 
         ttk.Label(section_budget, text="Límite diario (USD):").grid(
             row=0, column=0, sticky="w", pady=5
