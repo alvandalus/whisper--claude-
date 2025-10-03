@@ -50,9 +50,20 @@ run.bat  # Windows
 │   │   ├── audio_utils.py  # Utilidades de audio
 │   │   ├── budget.py       # Control de presupuesto
 │   │   └── config.py       # Configuración
+│   ├── tests/              # 🧪 Tests unitarios y de integración
+│   ├── .env.example        # 🔐 Template de variables de entorno
+│   ├── Dockerfile          # 🐳 Containerización
+│   ├── docker-compose.yml  # 🐳 Orquestación de contenedores
+│   ├── pytest.ini          # ⚙️ Configuración de tests
 │   ├── README.md           # Documentación completa
+│   ├── SETUP.md            # 📚 Guía de instalación detallada
+│   ├── CONTRIBUTING.md     # 🤝 Guía de contribución
 │   ├── requirements.txt    # Dependencias
 │   └── run.bat / run.sh    # Scripts de inicio
+│
+├── .github/
+│   └── workflows/
+│       └── ci.yml          # 🔄 CI/CD automatizado
 │
 ├── archive-original/        📦 Archivos originales (backup)
 │   ├── whisper_gui.py      # GUI original
@@ -67,6 +78,7 @@ run.bat  # Windows
 
 ## ✨ Características
 
+### Funcionalidades Core
 - 🤖 **Multi-Proveedor**: OpenAI, Groq, Whisper Local
 - 💰 **Control de Costes**: Sistema de presupuesto diario
 - 🎵 **Multi-Formato**: MP3, WAV, M4A, FLAC, OGG, etc.
@@ -75,6 +87,16 @@ run.bat  # Windows
 - 📊 **Comparador**: Análisis de costes entre proveedores
 - 🚀 **Procesamiento Paralelo**: División y compresión optimizada
 - 📁 **Procesamiento por Lotes**: Múltiples archivos simultáneos
+
+### 🆕 Mejoras de Calidad y Desarrollo
+- 🔐 **Gestión Segura de Credenciales**: Variables de entorno con `.env`
+- 🧪 **Suite de Tests**: Tests unitarios y de integración con pytest
+- 🐳 **Docker Ready**: Dockerfile y docker-compose incluidos
+- 🔄 **CI/CD**: GitHub Actions para tests automáticos
+- 📦 **Dependencias Versionadas**: Requirements con versiones específicas
+- 🛡️ **Análisis de Seguridad**: Safety y Bandit integrados
+- 📊 **Cobertura de Código**: Reports automáticos con pytest-cov
+- 🎨 **Code Quality**: Black, Ruff y MyPy configurados
 
 ---
 
@@ -102,9 +124,16 @@ run.bat  # Windows
 
 ## 📖 Documentación
 
+### Documentación de Usuario
 - **Documentación Principal**: [`transcriptor-pro/README.md`](transcriptor-pro/README.md)
+- **Guía de Instalación**: [`transcriptor-pro/SETUP.md`](transcriptor-pro/SETUP.md)
 - **Guía de Migración**: [`transcriptor-pro/MIGRATION.md`](transcriptor-pro/MIGRATION.md)
 - **Historial de Cambios**: [`transcriptor-pro/CHANGELOG.md`](transcriptor-pro/CHANGELOG.md)
+
+### Documentación de Desarrollo
+- **Guía de Contribución**: [`transcriptor-pro/CONTRIBUTING.md`](transcriptor-pro/CONTRIBUTING.md)
+- **Configuración de Tests**: [`transcriptor-pro/pytest.ini`](transcriptor-pro/pytest.ini)
+- **CI/CD Workflows**: [`.github/workflows/ci.yml`](.github/workflows/ci.yml)
 
 ---
 

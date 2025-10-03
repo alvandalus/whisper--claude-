@@ -1,0 +1,72 @@
+# Dockerignore para Transcriptor Pro
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+dist/
+build/
+.pytest_cache/
+.coverage
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+
+# Virtual environments
+.venv/
+venv/
+ENV/
+env/
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Datos sensibles
+.env
+.env.*
+!.env.example
+config.json
+*.key
+*.pem
+credentials.json
+
+# Temporales
+tmp/
+temp/
+*.tmp
+*.log
+
+# Archivos de audio y transcripciones
+*.mp3
+*.wav
+*.m4a
+*.flac
+transcripts/
+INBOX/
+OUT/
+
+# Git
+.git/
+.gitignore
+.github/
+
+# Docs
+*.md
+!README.md
+docs/
+
+# Tests
+tests/
+pytest.ini
+.coverage

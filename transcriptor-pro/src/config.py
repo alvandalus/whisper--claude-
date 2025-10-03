@@ -10,38 +10,48 @@ from dataclasses import dataclass, asdict, field
 from typing import Optional
 import logging
 
-logger = logging.getLogger(__name__)
+# Cargar variables de entorno desde .env
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+    logger = logging.getLogger(__name__)
+    logger.debug(".env cargado exitosamente")
+except ImportError:
+    logger = logging.getLogger(__name__)
+    logger.warning("python-dotenv no instalado. Variables de entorno .env no disponibles.")
 
 # Directorio de configuración
 APP_ROOT = Path(os.getenv("APPDATA", Path.home())) / ".transcriptor_pro"
 TRANSCRIPTS_DIR = APP_ROOT / "transcripts"
 CONFIG_FILE = APP_ROOT / "config.json"
+LOGS_DIR = APP_ROOT / "logs"
 
 # Crear directorios necesarios
 TRANSCRIPTS_DIR.mkdir(parents=True, exist_ok=True)
+LOGS_DIR.mkdir(parents=True, exist_ok=True)
 
 
 @dataclass
 class AppConfig:
     """Configuración de la aplicación"""
     # Modelo y proveedor
-    model: str = "groq-whisper-large-v3"
+    model: str = field(default_factory=lambda: os.getenv("DEFAULT_MODEL", "groq-whisper-large-v3"))
 
-    # API Keys
-    openai_api_key: str = ""
-    groq_api_key: str = ""
+    # API Keys (primero desde .env, luego desde config guardado)
+    openai_api_key: str = field(default_factory=lambda: os.getenv("OPENAI_API_KEY", ""))
+    groq_api_key: str = field(default_factory=lambda: os.getenv("GROQ_API_KEY", ""))
 
     # Opciones de procesamiento
-    bitrate: int = 192
-    use_vad: bool = False
-    export_srt: bool = True
+    bitrate: int = field(default_factory=lambda: int(os.getenv("AUDIO_BITRATE", "192")))
+    use_vad: bool = field(default_factory=lambda: os.getenv("USE_VAD", "false").lower() == "true")
+    export_srt: bool = field(default_factory=lambda: os.getenv("EXPORT_SRT", "true").lower() == "true")
 
     # Directorios
-    output_dir: str = str(TRANSCRIPTS_DIR)
-    inbox_dir: str = str(Path.home() / "TranscriptorPro" / "INBOX")
+    output_dir: str = field(default_factory=lambda: os.getenv("OUTPUT_DIR", str(TRANSCRIPTS_DIR)))
+    inbox_dir: str = field(default_factory=lambda: os.getenv("INBOX_DIR", str(Path.home() / "TranscriptorPro" / "INBOX")))
 
     # Presupuesto
-    daily_budget: float = 2.0
+    daily_budget: float = field(default_factory=lambda: float(os.getenv("DAILY_BUDGET", "2.0")))
 
     # Historial
     history: list = field(default_factory=list)

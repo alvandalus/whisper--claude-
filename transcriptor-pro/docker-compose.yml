@@ -1,0 +1,85 @@
+version: '3.8'
+
+services:
+  transcriptor-pro:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: transcriptor-pro:latest
+    container_name: transcriptor-pro
+
+    environment:
+      # Cargar desde archivo .env
+      - GROQ_API_KEY=${GROQ_API_KEY}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - DEFAULT_MODEL=${DEFAULT_MODEL:-groq-whisper-large-v3}
+      - DAILY_BUDGET=${DAILY_BUDGET:-2.0}
+      - AUDIO_BITRATE=${AUDIO_BITRATE:-192}
+      - USE_VAD=${USE_VAD:-false}
+      - EXPORT_SRT=${EXPORT_SRT:-true}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+
+    volumes:
+      # Montar directorios para persistencia
+      - ./INBOX:/app/INBOX
+      - ./OUT:/app/OUT
+      - ./transcripts:/app/transcripts
+      - ./logs:/app/logs
+      - ./config:/app/config
+
+    # Para GUI, necesitarás X11 forwarding en Linux
+    # En Windows/Mac, usa el modo CLI o servidor web
+    # network_mode: "host"  # Descomenta si necesitas acceso a display local
+
+    restart: unless-stopped
+
+    # Recursos opcionales (ajusta según tus necesidades)
+    # deploy:
+    #   resources:
+    #     limits:
+    #       cpus: '2'
+    #       memory: 4G
+    #     reservations:
+    #       cpus: '1'
+    #       memory: 2G
+
+  # Servicio opcional: worker para procesamiento por lotes
+  transcriptor-worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: transcriptor-pro:latest
+    container_name: transcriptor-worker
+
+    environment:
+      - GROQ_API_KEY=${GROQ_API_KEY}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - DEFAULT_MODEL=${DEFAULT_MODEL:-groq-whisper-large-v3}
+      - WORKER_MODE=true
+
+    volumes:
+      - ./INBOX:/app/INBOX
+      - ./OUT:/app/OUT
+      - ./transcripts:/app/transcripts
+      - ./logs:/app/logs
+
+    # Comando personalizado para modo worker
+    command: python -m src.batch_processor
+
+    restart: unless-stopped
+
+    # Este servicio está deshabilitado por defecto
+    profiles:
+      - worker
+
+volumes:
+  transcripts:
+    driver: local
+  logs:
+    driver: local
+  config:
+    driver: local
+
+networks:
+  default:
+    name: transcriptor-network
